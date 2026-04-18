@@ -10,7 +10,7 @@ from datetime import timedelta
 import warnings
 warnings.filterwarnings('ignore')
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler('ig_brute_debug.log'),
