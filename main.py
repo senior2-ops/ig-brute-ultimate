@@ -102,7 +102,7 @@ class ProxyRotator:
           return # Şimdilik Bu Kısmı Atlıyoruz!
         
         
-        import requests as sync_requests
+      import requests as sync_requests
         sources=[
             'https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=5000&country=all&ssl=all&anonymity=elite',
             'https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt',
