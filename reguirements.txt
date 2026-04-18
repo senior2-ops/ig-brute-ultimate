@@ -1,0 +1,6 @@
+aiohttp
+pycryptodome
+fake-useragent
+pysocks
+dnspython
+brotli
